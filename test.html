@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Pencil Drawing Tool 6</title>
+    <title>Apple Pencil Drawing Tool</title>
     <style>
         body, html {
             margin: 0;
@@ -143,9 +143,18 @@
             canvas.addEventListener("mousemove", moveAction);
             canvas.addEventListener("mouseup", endAction);
             canvas.addEventListener("mouseleave", endAction);
-            canvas.addEventListener("touchstart", startAction);
-            canvas.addEventListener("touchmove", moveAction);
-            canvas.addEventListener("touchend", endAction);
+            canvas.addEventListener("touchstart", (e) => {
+                startAction(e);
+                e.preventDefault();
+            });
+            canvas.addEventListener("touchmove", (e) => {
+                moveAction(e);
+                e.preventDefault();
+            });
+            canvas.addEventListener("touchend", (e) => {
+                endAction(e);
+                e.preventDefault();
+            });
 
             function createButton(text, top, action){
                 let button = document.createElement("button");
