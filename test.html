@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Pencil Drawing Tool 5</title>
+    <title>Apple Pencil Drawing Tool 6</title>
     <style>
         body, html {
             margin: 0;
@@ -59,7 +59,7 @@
             }
 
             function startDrawing(e){
-                if (!isDrawingEnabled) return;
+                if (!isDrawingEnabled || isErasing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
@@ -70,7 +70,7 @@
             }
 
             function continueDrawing(e){
-                if (!drawing) return;
+                if (!drawing || !isDrawingEnabled || isErasing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
@@ -93,11 +93,12 @@
                 e.preventDefault();
                 let pos = getMousePos(e);
                 ctx.save();
-                ctx.globalCompositeOperation = 'destination-out';
+                ctx.globalCompositeOperation = 'destination-out'; // Enable erasing
                 ctx.beginPath();
                 ctx.arc(pos.x, pos.y, ctx.lineWidth / 2, 0, Math.PI * 2, false);
                 ctx.fill();
                 ctx.restore();
+                drawing = true; // To keep erasing while moving
             }
 
             function redrawCanvas(){
@@ -116,7 +117,7 @@
                 if (e.touches && !isApplePencilTouch(e)) return;
                 if (isErasing) {
                     erasePath(e);
-                } else if (isDrawingEnabled) {
+                } else {
                     startDrawing(e);
                 }
             }
@@ -126,7 +127,7 @@
                 if (e.touches && !isApplePencilTouch(e)) return;
                 if (isErasing) {
                     erasePath(e);
-                } else if (isDrawingEnabled) {
+                } else {
                     continueDrawing(e);
                 }
             }
@@ -186,8 +187,8 @@
 
             let eraserButton = createButton("Toggle Eraser", "130px", () => {
                 isErasing = !isErasing;
-                ctx.strokeStyle = isErasing ? "transparent" : colorPicker.value;
-                drawing = false; // Ensure drawing stops when toggling eraser
+                drawing = false; // Stop current drawing
+                ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over'; // Switch mode
             });
 
             let undoButton = createButton("Undo", "170px", () => {
@@ -215,6 +216,7 @@
             colorPicker.onchange = () => {
                 ctx.strokeStyle = colorPicker.value;
                 isErasing = false;
+                ctx.globalCompositeOperation = 'source-over'; // Ensure back to normal drawing
             };
             document.body.appendChild(colorPicker);
 
