@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Pencil Drawing Tool</title>
+    <title>Apple Pencil Drawing Tool 2</title>
     <style>
         body, html {
             margin: 0;
@@ -88,7 +88,7 @@
             }
 
             function erasePath(e){
-                if (!isDrawingEnabled) return;
+                if (!isDrawingEnabled || !isErasing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
@@ -98,7 +98,6 @@
                 ctx.arc(pos.x, pos.y, ctx.lineWidth / 2, 0, Math.PI * 2, false);
                 ctx.fill();
                 ctx.restore();
-                drawing = true; // To keep erasing while moving
             }
 
             function redrawCanvas(){
