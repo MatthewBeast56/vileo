@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drawing Tool</title>
+    <title>Apple Pencil Drawing Tool 1</title>
     <style>
         body, html {
             margin: 0;
@@ -43,13 +43,19 @@
             let currentPath = [];
 
             function getMousePos(e){
+                const touch = e.touches ? e.touches[0] : e;
                 return {
-                    x: (e.touches ? e.touches[0].clientX : e.clientX) + window.scrollX,
-                    y: (e.touches ? e.touches[0].clientY : e.clientY) + window.scrollY
+                    x: touch.clientX + window.scrollX,
+                    y: touch.clientY + window.scrollY
                 };
             }
 
+            function isApplePencilTouch(e){
+                return e.touches && e.touches[0].force > 0 && e.touches[0].pointerType === "pen";
+            }
+
             function startDrawing(e){
+                if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
                 ctx.beginPath();
@@ -58,6 +64,7 @@
             }
 
             function continueDrawing(e){
+                if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
                 ctx.lineTo(pos.x, pos.y);
@@ -74,6 +81,7 @@
             }
 
             function erasePath(e){
+                if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
                 ctx.clearRect(pos.x - ctx.lineWidth, pos.y - ctx.lineWidth, ctx.lineWidth * 2, ctx.lineWidth * 2);
@@ -92,6 +100,7 @@
             }
 
             function startAction(e){
+                if (e.touches && !isApplePencilTouch(e)) return;
                 drawing = true;
                 if (isErasing) {
                     erasePath(e);
@@ -102,6 +111,7 @@
 
             function moveAction(e){
                 if (!drawing) return;
+                if (e.touches && !isApplePencilTouch(e)) return;
                 if (isErasing) {
                     erasePath(e);
                 } else if (isDrawingEnabled) {
