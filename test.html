@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Pencil Drawing Tool 2</title>
+    <title>Apple Pencil Drawing Tool</title>
     <style>
         body, html {
             margin: 0;
@@ -92,12 +92,8 @@
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
-                ctx.save();
-                ctx.globalCompositeOperation = 'destination-out'; // Enable erasing
-                ctx.beginPath();
-                ctx.arc(pos.x, pos.y, ctx.lineWidth / 2, 0, Math.PI * 2, false);
-                ctx.fill();
-                ctx.restore();
+                ctx.clearRect(pos.x - ctx.lineWidth / 2, pos.y - ctx.lineWidth / 2, ctx.lineWidth, ctx.lineWidth);
+                drawing = true; // To keep erasing while moving
             }
 
             function redrawCanvas(){
@@ -196,7 +192,7 @@
             let eraserButton = createButton("Toggle Eraser", "130px", () => {
                 isErasing = !isErasing;
                 drawing = false; // Stop current drawing
-                ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over'; // Switch mode
+                ctx.globalCompositeOperation = isErasing ? 'source-over' : 'source-over'; // Reset to normal drawing mode
             });
 
             let undoButton = createButton("Undo", "170px", () => {
