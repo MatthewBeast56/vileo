@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Pencil Drawing Tool 4</title>
+    <title>Apple Pencil Drawing Tool 5</title>
     <style>
         body, html {
             margin: 0;
@@ -59,6 +59,7 @@
             }
 
             function startDrawing(e){
+                if (!isDrawingEnabled) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
@@ -87,6 +88,7 @@
             }
 
             function erasePath(e){
+                if (!isDrawingEnabled) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
@@ -112,7 +114,6 @@
 
             function startAction(e){
                 if (e.touches && !isApplePencilTouch(e)) return;
-                drawing = true;
                 if (isErasing) {
                     erasePath(e);
                 } else if (isDrawingEnabled) {
@@ -180,12 +181,13 @@
 
             let toggleButton = createButton("Toggle Drawing", "90px", () => {
                 isDrawingEnabled = !isDrawingEnabled;
-                canvas.style.pointerEvents = isDrawingEnabled ? "auto" : "none";
+                if (!isDrawingEnabled) drawing = false;
             });
 
             let eraserButton = createButton("Toggle Eraser", "130px", () => {
                 isErasing = !isErasing;
                 ctx.strokeStyle = isErasing ? "transparent" : colorPicker.value;
+                drawing = false; // Ensure drawing stops when toggling eraser
             });
 
             let undoButton = createButton("Undo", "170px", () => {
