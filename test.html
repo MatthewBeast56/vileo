@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Pencil Drawing Tool 2</title>
+    <title>Apple Pencil Drawing Tool 3</title>
     <style>
         body, html {
             margin: 0;
@@ -22,8 +22,8 @@
             canvas.style.position = "absolute";
             canvas.style.top = 0;
             canvas.style.left = 0;
-            canvas.width = document.documentElement.scrollWidth * 2;
-            canvas.height = document.documentElement.scrollHeight * 2;
+            canvas.width = window.innerWidth * 2;
+            canvas.height = window.innerHeight * 2;
             canvas.style.zIndex = 10000;
             canvas.style.pointerEvents = "auto";
             canvas.style.transform = "scale(0.5)";
@@ -45,17 +45,17 @@
             function getMousePos(e){
                 const touch = e.touches ? e.touches[0] : e;
                 return {
-                    x: touch.clientX + window.scrollX,
-                    y: touch.clientY + window.scrollY
+                    x: touch.clientX,
+                    y: touch.clientY
                 };
             }
 
             function isApplePencilTouch(e){
                 if (e.touches) {
                     const touch = e.touches[0];
-                    return touch.pointerType === "pen"; // Detect Apple Pencil input
+                    return touch.touchType === "stylus"; // Ensure it's an Apple Pencil
                 }
-                return true; // Allow mouse events as fallback
+                return true; // Allow mouse events on desktops
             }
 
             function startDrawing(e){
@@ -65,9 +65,11 @@
                 ctx.beginPath();
                 ctx.moveTo(pos.x, pos.y);
                 currentPath.push({x: pos.x, y: pos.y});
+                drawing = true;
             }
 
             function continueDrawing(e){
+                if (!drawing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
@@ -105,7 +107,6 @@
 
             function startAction(e){
                 if (e.touches && !isApplePencilTouch(e)) return;
-                drawing = true;
                 if (isErasing) {
                     erasePath(e);
                 } else if (isDrawingEnabled) {
