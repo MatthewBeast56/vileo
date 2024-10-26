@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Pencil Drawing Tool 1</title>
+    <title>Apple Pencil Drawing Tool 2</title>
     <style>
         body, html {
             margin: 0;
@@ -51,7 +51,11 @@
             }
 
             function isApplePencilTouch(e){
-                return e.touches && e.touches[0].force > 0 && e.touches[0].pointerType === "pen";
+                if (e.touches) {
+                    const touch = e.touches[0];
+                    return touch.pointerType === "pen"; // Detect Apple Pencil input
+                }
+                return true; // Allow mouse events as fallback
             }
 
             function startDrawing(e){
