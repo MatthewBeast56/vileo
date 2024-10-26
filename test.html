@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing Tool</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        (function(){
+            let canvas = document.createElement("canvas");
+            canvas.style.position = "absolute";
+            canvas.style.top = 0;
+            canvas.style.left = 0;
+            canvas.width = document.documentElement.scrollWidth * 2;
+            canvas.height = document.documentElement.scrollHeight * 2;
+            canvas.style.zIndex = 10000;
+            canvas.style.pointerEvents = "auto";
+            canvas.style.transform = "scale(0.5)";
+            canvas.style.transformOrigin = "top left";
+            document.body.appendChild(canvas);
+            let ctx = canvas.getContext("2d");
+            ctx.scale(2, 2);
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = "red";
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            let drawing = false;
+            let isDrawingEnabled = true;
+            let isErasing = false;
+            let paths = [];
+            let undonePaths = [];
+            let currentPath = [];
+
+            function getMousePos(e){
+                return {
+                    x: (e.touches ? e.touches[0].clientX : e.clientX) + window.scrollX,
+                    y: (e.touches ? e.touches[0].clientY : e.clientY) + window.scrollY
+                };
+            }
+
+            function startDrawing(e){
+                e.preventDefault();
+                let pos = getMousePos(e);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+                currentPath.push({x: pos.x, y: pos.y});
+            }
+
+            function continueDrawing(e){
+                e.preventDefault();
+                let pos = getMousePos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                currentPath.push({x: pos.x, y: pos.y});
+            }
+
+            function savePath(){
+                if (currentPath.length > 0) {
+                    paths.push([...currentPath]);
+                    undonePaths = [];
+                    currentPath = [];
+                }
+            }
+
+            function erasePath(e){
+                e.preventDefault();
+                let pos = getMousePos(e);
+                ctx.clearRect(pos.x - ctx.lineWidth, pos.y - ctx.lineWidth, ctx.lineWidth * 2, ctx.lineWidth * 2);
+            }
+
+            function redrawCanvas(){
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let path of paths) {
+                    ctx.beginPath();
+                    ctx.moveTo(path[0].x, path[0].y);
+                    for (let i = 1; i < path.length; i++) {
+                        ctx.lineTo(path[i].x, path[i].y);
+                    }
+                    ctx.stroke();
+                }
+            }
+
+            function startAction(e){
+                drawing = true;
+                if (isErasing) {
+                    erasePath(e);
+                } else if (isDrawingEnabled) {
+                    startDrawing(e);
+                }
+            }
+
+            function moveAction(e){
+                if (!drawing) return;
+                if (isErasing) {
+                    erasePath(e);
+                } else if (isDrawingEnabled) {
+                    continueDrawing(e);
+                }
+            }
+
+            function endAction(){
+                if (drawing) {
+                    drawing = false;
+                    if (!isErasing) savePath();
+                }
+            }
+
+            canvas.addEventListener("mousedown", startAction);
+            canvas.addEventListener("mousemove", moveAction);
+            canvas.addEventListener("mouseup", endAction);
+            canvas.addEventListener("mouseleave", endAction);
+            canvas.addEventListener("touchstart", startAction);
+            canvas.addEventListener("touchmove", moveAction);
+            canvas.addEventListener("touchend", endAction);
+
+            function createButton(text, top, action){
+                let button = document.createElement("button");
+                button.textContent = text;
+                button.style.position = "fixed";
+                button.style.top = top;
+                button.style.right = "10px";
+                button.style.zIndex = 10001;
+                button.style.padding = "10px";
+                button.style.backgroundColor = "#fff";
+                button.style.border = "2px solid #000";
+                button.style.cursor = "pointer";
+                button.ontouchstart = button.onclick = action;
+                document.body.appendChild(button);
+                return button;
+            }
+
+            createButton("Clear Drawing", "10px", () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                paths = [];
+            });
+
+            createButton("Remove Canvas", "50px", () => {
+                canvas.remove();
+                clearButton.remove();
+                removeButton.remove();
+                toggleButton.remove();
+                eraserButton.remove();
+                undoButton.remove();
+                redoButton.remove();
+                colorPicker.remove();
+                lineWidthPicker.remove();
+            });
+
+            let toggleButton = createButton("Toggle Drawing", "90px", () => {
+                isDrawingEnabled = !isDrawingEnabled;
+                canvas.style.pointerEvents = isDrawingEnabled ? "auto" : "none";
+            });
+
+            let eraserButton = createButton("Toggle Eraser", "130px", () => {
+                isErasing = !isErasing;
+                ctx.strokeStyle = isErasing ? "transparent" : colorPicker.value;
+            });
+
+            let undoButton = createButton("Undo", "170px", () => {
+                if (paths.length > 0) {
+                    undonePaths.push(paths.pop());
+                    redrawCanvas();
+                }
+            });
+
+            let redoButton = createButton("Redo", "210px", () => {
+                if (undonePaths.length > 0) {
+                    paths.push(undonePaths.pop());
+                    redrawCanvas();
+                }
+            });
+
+            let colorPicker = document.createElement("input");
+            colorPicker.type = "color";
+            colorPicker.value = "#ff0000";
+            colorPicker.style.position = "fixed";
+            colorPicker.style.top = "250px";
+            colorPicker.style.right = "10px";
+            colorPicker.style.zIndex = 10001;
+            colorPicker.style.cursor = "pointer";
+            colorPicker.onchange = () => {
+                ctx.strokeStyle = colorPicker.value;
+                isErasing = false;
+            };
+            document.body.appendChild(colorPicker);
+
+            let lineWidthPicker = document.createElement("input");
+            lineWidthPicker.type = "range";
+            lineWidthPicker.min = 1;
+            lineWidthPicker.max = 50;
+            lineWidthPicker.value = 5;
+            lineWidthPicker.style.position = "fixed";
+            lineWidthPicker.style.top = "290px";
+            lineWidthPicker.style.right = "10px";
+            lineWidthPicker.style.zIndex = 10001;
+            lineWidthPicker.style.cursor = "pointer";
+            lineWidthPicker.oninput = () => {
+                ctx.lineWidth = lineWidthPicker.value;
+            };
+            document.body.appendChild(lineWidthPicker);
+        })();
+    </script>
+</body>
+</html>
