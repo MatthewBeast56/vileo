@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Drawing Tool 1</title>
+    <title>Canvas Drawing Tool</title>
 </head>
 <body>
     <script>
@@ -91,7 +91,7 @@
             function startAction(e) {
                 if (e.touches && !isApplePencilTouch(e)) return;
                 ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over';
-                ctx.lineWidth = lineWidthPicker.value; // Use selected brush size
+                ctx.lineWidth = lineWidthPicker.value;
                 startDrawing(e);
             }
 
@@ -105,7 +105,7 @@
                 if (drawing) {
                     drawing = false;
                     if (!isErasing) savePath();
-                    ctx.globalCompositeOperation = 'source-over'; // Reset to drawing mode
+                    ctx.globalCompositeOperation = 'source-over';
                 }
             }
 
@@ -124,11 +124,20 @@
                 button.style.top = top;
                 button.style.right = "10px";
                 button.style.zIndex = 10001;
-                button.style.padding = "10px";
-                button.style.backgroundColor = "#fff";
-                button.style.border = "2px solid #000";
+                button.style.padding = "10px 15px";
+                button.style.backgroundColor = "#f0f0f0";
+                button.style.border = "none";
+                button.style.borderRadius = "8px";
+                button.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
                 button.style.cursor = "pointer";
-                button.style.transition = "transform 0.2s ease";
+                button.style.fontSize = "14px";
+                button.style.transition = "all 0.3s ease";
+                button.onmouseover = () => {
+                    button.style.backgroundColor = "#e0e0e0";
+                };
+                button.onmouseout = () => {
+                    button.style.backgroundColor = "#f0f0f0";
+                };
                 button.ontouchstart = button.onclick = action;
                 document.body.appendChild(button);
                 return button;
@@ -140,7 +149,7 @@
                     drawing = false;
                     toggleDrawingButton.style.backgroundColor = "#ccc";
                 } else {
-                    toggleDrawingButton.style.backgroundColor = "#fff";
+                    toggleDrawingButton.style.backgroundColor = "#f0f0f0";
                 }
             });
 
@@ -148,7 +157,7 @@
                 isErasing = false;
                 isDrawingEnabled = true;
                 ctx.globalCompositeOperation = 'source-over';
-                pencilButton.style.transform = "scale(1.2)";
+                pencilButton.style.transform = "scale(1.1)";
                 eraserButton.style.transform = "scale(1)";
             });
 
@@ -157,7 +166,7 @@
                 isDrawingEnabled = true;
                 ctx.globalCompositeOperation = 'destination-out';
                 pencilButton.style.transform = "scale(1)";
-                eraserButton.style.transform = "scale(1.2)";
+                eraserButton.style.transform = "scale(1.1)";
             });
 
             let undoButton = createButton("Undo", "130px", () => {
@@ -179,25 +188,17 @@
                 paths = [];
             });
 
-            createButton("Remove Canvas", "250px", () => {
-                canvas.remove();
-                pencilButton.remove();
-                eraserButton.remove();
-                toggleDrawingButton.remove();
-                undoButton.remove();
-                redoButton.remove();
-                colorPicker.remove();
-                lineWidthPicker.remove();
-            });
-
             let colorPicker = document.createElement("input");
             colorPicker.type = "color";
             colorPicker.value = "#ff0000";
             colorPicker.style.position = "fixed";
-            colorPicker.style.top = "290px";
+            colorPicker.style.top = "250px";
             colorPicker.style.right = "10px";
             colorPicker.style.zIndex = 10001;
+            colorPicker.style.padding = "5px";
             colorPicker.style.cursor = "pointer";
+            colorPicker.style.borderRadius = "8px";
+            colorPicker.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
             colorPicker.onchange = () => {
                 ctx.strokeStyle = colorPicker.value;
                 isErasing = false;
@@ -211,16 +212,18 @@
             lineWidthPicker.max = 50;
             lineWidthPicker.value = 5;
             lineWidthPicker.style.position = "fixed";
-            lineWidthPicker.style.top = "330px";
+            lineWidthPicker.style.top = "290px";
             lineWidthPicker.style.right = "10px";
             lineWidthPicker.style.zIndex = 10001;
             lineWidthPicker.style.cursor = "pointer";
+            lineWidthPicker.style.borderRadius = "8px";
+            lineWidthPicker.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
             lineWidthPicker.oninput = () => {
                 ctx.lineWidth = lineWidthPicker.value;
             };
             document.body.appendChild(lineWidthPicker);
 
-            pencilButton.style.transform = "scale(1.2)"; // Default selected
+            pencilButton.style.transform = "scale(1.1)"; // Default selected
         })();
     </script>
 </body>
