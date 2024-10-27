@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Drawing Tool 5</title>
+    <title>Canvas Drawing Tool</title>
 </head>
 <body>
     <script>
         (function() {
             let canvas = document.createElement("canvas");
-            // Increase internal resolution of the canvas for better drawing quality
-            let scaleFactor = 4; // Increase the scale factor for smoother lines
+            let scaleFactor = 2; 
             canvas.width = window.innerWidth * scaleFactor;
             canvas.height = window.innerHeight * scaleFactor;
             canvas.style.width = window.innerWidth + "px";
@@ -24,13 +23,11 @@
             document.body.appendChild(canvas);
 
             let ctx = canvas.getContext("2d");
-            ctx.scale(scaleFactor, scaleFactor); // Scale to match the resolution
+            ctx.scale(scaleFactor, scaleFactor);
             ctx.lineWidth = 5;
             ctx.strokeStyle = "red";
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
-            ctx.shadowBlur = 1.5; // Slight blur for smoother lines
-            ctx.shadowColor = "black";
 
             let drawing = false;
             let isDrawingEnabled = true;
@@ -38,10 +35,12 @@
             let paths = [];
             let undonePaths = [];
             let currentPath = [];
+            let previousTool = "brush";
+            let contextualPalette = document.createElement("div");
 
             function getMousePos(e) {
                 const touch = e.touches ? e.touches[0] : e;
-                return { x: touch.clientX, y: touch.clientY };
+                return { x: touch.clientX, y: touch.clientY, force: touch.force || 0 };
             }
 
             function isApplePencilTouch(e) {
@@ -68,9 +67,26 @@
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
-                ctx.lineTo(pos.x, pos.y);
+                
+                // Adjust line width based on force, simulating pressure sensitivity
+                if (e.touches && pos.force > 0) {
+                    ctx.lineWidth = Math.max(lineWidthPicker.value * pos.force, 1);
+                }
+
+                if (currentPath.length > 1) {
+                    let lastPoint = currentPath[currentPath.length - 1];
+                    ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, (lastPoint.x + pos.x) / 2, (lastPoint.y + pos.y) / 2);
+                } else {
+                    ctx.lineTo(pos.x, pos.y);
+                }
+
                 ctx.stroke();
                 currentPath.push({ x: pos.x, y: pos.y });
+
+                // Simulate Apple Pencil Pro Squeeze: Show contextual palette if force is high
+                if (e.touches && pos.force > 0.8) {
+                    showContextualPalette(pos.x, pos.y);
+                }
             }
 
             function savePath() {
@@ -87,9 +103,41 @@
                     ctx.beginPath();
                     ctx.moveTo(path[0].x, path[0].y);
                     for (let i = 1; i < path.length; i++) {
-                        ctx.lineTo(path[i].x, path[i].y);
+                        let point = path[i];
+                        let lastPoint = path[i - 1];
+                        ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, (lastPoint.x + point.x) / 2, (lastPoint.y + point.y) / 2);
                     }
                     ctx.stroke();
+                }
+            }
+
+            function showContextualPalette(x, y) {
+                contextualPalette.style.position = "fixed";
+                contextualPalette.style.left = `${x}px`;
+                contextualPalette.style.top = `${y}px`;
+                contextualPalette.style.background = "#ffffff";
+                contextualPalette.style.border = "1px solid #000";
+                contextualPalette.style.padding = "10px";
+                contextualPalette.style.borderRadius = "8px";
+                contextualPalette.style.zIndex = 10002;
+                contextualPalette.innerHTML = `
+                    <button onclick="switchToTool('brush')">Brush</button>
+                    <button onclick="switchToTool('eraser')">Eraser</button>
+                `;
+                document.body.appendChild(contextualPalette);
+                setTimeout(() => contextualPalette.remove(), 3000); // Auto hide after 3 seconds
+            }
+
+            function switchToTool(tool) {
+                previousTool = isErasing ? "eraser" : "brush";
+                if (tool === "eraser") {
+                    isErasing = true;
+                    isDrawingEnabled = true;
+                    ctx.globalCompositeOperation = 'destination-out';
+                } else if (tool === "brush") {
+                    isErasing = false;
+                    isDrawingEnabled = true;
+                    ctx.globalCompositeOperation = 'source-over';
                 }
             }
 
@@ -122,6 +170,9 @@
             canvas.addEventListener("touchmove", (e) => { moveAction(e); e.preventDefault(); });
             canvas.addEventListener("touchend", (e) => { endAction(); e.preventDefault(); });
 
+            let pencilButton = createButton("Pencil", "50px", () => switchToTool("brush"));
+            let eraserButton = createButton("Eraser", "90px", () => switchToTool("eraser"));
+            
             function createButton(text, top, action) {
                 let button = document.createElement("button");
                 button.textContent = text;
@@ -147,69 +198,6 @@
                 document.body.appendChild(button);
                 return button;
             }
-
-            let toggleDrawingButton = createButton("Toggle Drawing", "10px", () => {
-                isDrawingEnabled = !isDrawingEnabled;
-                if (!isDrawingEnabled) {
-                    drawing = false;
-                    toggleDrawingButton.style.backgroundColor = "#ccc";
-                } else {
-                    toggleDrawingButton.style.backgroundColor = "#f0f0f0";
-                }
-            });
-
-            let pencilButton = createButton("Pencil", "50px", () => {
-                isErasing = false;
-                isDrawingEnabled = true;
-                ctx.globalCompositeOperation = 'source-over';
-                pencilButton.style.transform = "scale(1.1)";
-                eraserButton.style.transform = "scale(1)";
-            });
-
-            let eraserButton = createButton("Eraser", "90px", () => {
-                isErasing = true;
-                isDrawingEnabled = true;
-                ctx.globalCompositeOperation = 'destination-out';
-                pencilButton.style.transform = "scale(1)";
-                eraserButton.style.transform = "scale(1.1)";
-            });
-
-            let undoButton = createButton("Undo", "130px", () => {
-                if (paths.length > 0) {
-                    undonePaths.push(paths.pop());
-                    redrawCanvas();
-                }
-            });
-
-            let redoButton = createButton("Redo", "170px", () => {
-                if (undonePaths.length > 0) {
-                    paths.push(undonePaths.pop());
-                    redrawCanvas();
-                }
-            });
-
-            createButton("Clear Drawing", "210px", () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                paths = [];
-            });
-
-            let colorPicker = document.createElement("input");
-            colorPicker.type = "color";
-            colorPicker.value = "#ff0000";
-            colorPicker.style.position = "fixed";
-            colorPicker.style.top = "250px";
-            colorPicker.style.right = "10px";
-            colorPicker.style.zIndex = 10001;
-            colorPicker.style.padding = "5px";
-            colorPicker.style.cursor = "pointer";
-            colorPicker.style.borderRadius = "8px";
-            colorPicker.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
-            colorPicker.onchange = () => {
-                ctx.strokeStyle = colorPicker.value;
-                isErasing = false;
-                ctx.globalCompositeOperation = 'source-over';
-            };
-            document.body.appendChild(colorPicker);
 
             let lineWidthPicker = document.createElement("input");
             lineWidthPicker.type = "range";
