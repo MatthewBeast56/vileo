@@ -81,7 +81,9 @@
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
-                ctx.clearRect(pos.x - ctx.lineWidth / 2, pos.y - ctx.lineWidth / 2, ctx.lineWidth, ctx.lineWidth);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                currentPath.push({ x: pos.x, y: pos.y });
                 drawing = true;
             }
 
@@ -100,8 +102,11 @@
             function startAction(e) {
                 if (e.touches && !isApplePencilTouch(e)) return;
                 if (isErasing) {
-                    erasePath(e);
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.lineWidth = 20; // Larger width for smoother erasing
+                    startDrawing(e);
                 } else {
+                    ctx.globalCompositeOperation = 'source-over';
                     startDrawing(e);
                 }
             }
@@ -120,6 +125,7 @@
                 if (drawing) {
                     drawing = false;
                     if (!isErasing) savePath();
+                    ctx.globalCompositeOperation = 'source-over'; // Reset to drawing mode
                 }
             }
 
@@ -174,16 +180,32 @@
                 pencilButton.style.transform = "scale(1)";
             });
 
-            createButton("Clear Drawing", "130px", () => {
+            let undoButton = createButton("Undo", "130px", () => {
+                if (paths.length > 0) {
+                    undonePaths.push(paths.pop());
+                    redrawCanvas();
+                }
+            });
+
+            let redoButton = createButton("Redo", "170px", () => {
+                if (undonePaths.length > 0) {
+                    paths.push(undonePaths.pop());
+                    redrawCanvas();
+                }
+            });
+
+            createButton("Clear Drawing", "210px", () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 paths = [];
             });
 
-            createButton("Remove Canvas", "170px", () => {
+            createButton("Remove Canvas", "250px", () => {
                 canvas.remove();
                 pencilButton.remove();
                 eraserButton.remove();
                 toggleDrawingButton.remove();
+                undoButton.remove();
+                redoButton.remove();
                 colorPicker.remove();
                 lineWidthPicker.remove();
             });
@@ -192,7 +214,7 @@
             colorPicker.type = "color";
             colorPicker.value = "#ff0000";
             colorPicker.style.position = "fixed";
-            colorPicker.style.top = "210px";
+            colorPicker.style.top = "290px";
             colorPicker.style.right = "10px";
             colorPicker.style.zIndex = 10001;
             colorPicker.style.cursor = "pointer";
@@ -209,7 +231,7 @@
             lineWidthPicker.max = 50;
             lineWidthPicker.value = 5;
             lineWidthPicker.style.position = "fixed";
-            lineWidthPicker.style.top = "250px";
+            lineWidthPicker.style.top = "330px";
             lineWidthPicker.style.right = "10px";
             lineWidthPicker.style.zIndex = 10001;
             lineWidthPicker.style.cursor = "pointer";
