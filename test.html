@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Drawing Tool 1</title>
+    <title>Canvas Drawing Tool</title>
 </head>
 <body>
     <script>
@@ -148,7 +148,17 @@
                 return button;
             }
 
-            let pencilButton = createButton("Pencil", "90px", () => {
+            let toggleDrawingButton = createButton("Toggle Drawing", "10px", () => {
+                isDrawingEnabled = !isDrawingEnabled;
+                if (!isDrawingEnabled) {
+                    drawing = false;
+                    toggleDrawingButton.style.backgroundColor = "#ccc";
+                } else {
+                    toggleDrawingButton.style.backgroundColor = "#fff";
+                }
+            });
+
+            let pencilButton = createButton("Pencil", "50px", () => {
                 isErasing = false;
                 isDrawingEnabled = true;
                 ctx.globalCompositeOperation = 'source-over';
@@ -156,7 +166,7 @@
                 eraserButton.style.transform = "scale(1)";
             });
 
-            let eraserButton = createButton("Eraser", "130px", () => {
+            let eraserButton = createButton("Eraser", "90px", () => {
                 isErasing = true;
                 isDrawingEnabled = true;
                 ctx.globalCompositeOperation = 'destination-out';
@@ -164,16 +174,49 @@
                 pencilButton.style.transform = "scale(1)";
             });
 
-            createButton("Clear Drawing", "10px", () => {
+            createButton("Clear Drawing", "130px", () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 paths = [];
             });
 
-            createButton("Remove Canvas", "50px", () => {
+            createButton("Remove Canvas", "170px", () => {
                 canvas.remove();
                 pencilButton.remove();
                 eraserButton.remove();
+                toggleDrawingButton.remove();
+                colorPicker.remove();
+                lineWidthPicker.remove();
             });
+
+            let colorPicker = document.createElement("input");
+            colorPicker.type = "color";
+            colorPicker.value = "#ff0000";
+            colorPicker.style.position = "fixed";
+            colorPicker.style.top = "210px";
+            colorPicker.style.right = "10px";
+            colorPicker.style.zIndex = 10001;
+            colorPicker.style.cursor = "pointer";
+            colorPicker.onchange = () => {
+                ctx.strokeStyle = colorPicker.value;
+                isErasing = false;
+                ctx.globalCompositeOperation = 'source-over';
+            };
+            document.body.appendChild(colorPicker);
+
+            let lineWidthPicker = document.createElement("input");
+            lineWidthPicker.type = "range";
+            lineWidthPicker.min = 1;
+            lineWidthPicker.max = 50;
+            lineWidthPicker.value = 5;
+            lineWidthPicker.style.position = "fixed";
+            lineWidthPicker.style.top = "250px";
+            lineWidthPicker.style.right = "10px";
+            lineWidthPicker.style.zIndex = 10001;
+            lineWidthPicker.style.cursor = "pointer";
+            lineWidthPicker.oninput = () => {
+                ctx.lineWidth = lineWidthPicker.value;
+            };
+            document.body.appendChild(lineWidthPicker);
 
             pencilButton.style.transform = "scale(1.2)"; // Default selected
         })();
