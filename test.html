@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Drawing Tool</title>
+    <title>Canvas Drawing Tool 1</title>
 </head>
 <body>
     <script>
@@ -48,7 +48,7 @@
             }
 
             function startDrawing(e) {
-                if (!isDrawingEnabled || isErasing) return;
+                if (!isDrawingEnabled) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
@@ -59,7 +59,7 @@
             }
 
             function continueDrawing(e) {
-                if (!drawing || !isDrawingEnabled || isErasing) return;
+                if (!drawing || !isDrawingEnabled) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
@@ -76,17 +76,6 @@
                 }
             }
 
-            function erasePath(e) {
-                if (!isDrawingEnabled || !isErasing) return;
-                if (e.touches && !isApplePencilTouch(e)) return;
-                e.preventDefault();
-                let pos = getMousePos(e);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
-                currentPath.push({ x: pos.x, y: pos.y });
-                drawing = true;
-            }
-
             function redrawCanvas() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let path of paths) {
@@ -101,24 +90,15 @@
 
             function startAction(e) {
                 if (e.touches && !isApplePencilTouch(e)) return;
-                if (isErasing) {
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.lineWidth = 20; // Larger width for smoother erasing
-                    startDrawing(e);
-                } else {
-                    ctx.globalCompositeOperation = 'source-over';
-                    startDrawing(e);
-                }
+                ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over';
+                ctx.lineWidth = lineWidthPicker.value; // Use selected brush size
+                startDrawing(e);
             }
 
             function moveAction(e) {
                 if (!drawing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
-                if (isErasing) {
-                    erasePath(e);
-                } else {
-                    continueDrawing(e);
-                }
+                continueDrawing(e);
             }
 
             function endAction() {
@@ -176,8 +156,8 @@
                 isErasing = true;
                 isDrawingEnabled = true;
                 ctx.globalCompositeOperation = 'destination-out';
-                eraserButton.style.transform = "scale(1.2)";
                 pencilButton.style.transform = "scale(1)";
+                eraserButton.style.transform = "scale(1.2)";
             });
 
             let undoButton = createButton("Undo", "130px", () => {
