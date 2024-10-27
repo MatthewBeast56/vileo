@@ -3,29 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Drawing Tool</title>
+    <title>Canvas Drawing Tool 5</title>
 </head>
 <body>
     <script>
         (function() {
             let canvas = document.createElement("canvas");
+            // Increase internal resolution of the canvas for better drawing quality
+            let scaleFactor = 4; // Increase the scale factor for smoother lines
+            canvas.width = window.innerWidth * scaleFactor;
+            canvas.height = window.innerHeight * scaleFactor;
+            canvas.style.width = window.innerWidth + "px";
+            canvas.style.height = window.innerHeight + "px";
             canvas.style.position = "absolute";
             canvas.style.top = 0;
             canvas.style.left = 0;
-            canvas.width = window.innerWidth * 2;
-            canvas.height = window.innerHeight * 2;
             canvas.style.zIndex = 10000;
             canvas.style.pointerEvents = "auto";
-            canvas.style.transform = "scale(0.5)";
             canvas.style.transformOrigin = "top left";
             document.body.appendChild(canvas);
 
             let ctx = canvas.getContext("2d");
-            ctx.scale(2, 2);
+            ctx.scale(scaleFactor, scaleFactor); // Scale to match the resolution
             ctx.lineWidth = 5;
             ctx.strokeStyle = "red";
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
+            ctx.shadowBlur = 1.5; // Slight blur for smoother lines
+            ctx.shadowColor = "black";
 
             let drawing = false;
             let isDrawingEnabled = true;
