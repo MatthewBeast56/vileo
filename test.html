@@ -3,21 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apple Pencil Drawing Tool</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #f0f0f0;
-        }
-    </style>
+    <title>Canvas Drawing Tool</title>
 </head>
 <body>
     <script>
-        (function(){
+        (function() {
             let canvas = document.createElement("canvas");
             canvas.style.position = "absolute";
             canvas.style.top = 0;
@@ -29,12 +19,14 @@
             canvas.style.transform = "scale(0.5)";
             canvas.style.transformOrigin = "top left";
             document.body.appendChild(canvas);
+
             let ctx = canvas.getContext("2d");
             ctx.scale(2, 2);
             ctx.lineWidth = 5;
             ctx.strokeStyle = "red";
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
+
             let drawing = false;
             let isDrawingEnabled = true;
             let isErasing = false;
@@ -42,44 +34,41 @@
             let undonePaths = [];
             let currentPath = [];
 
-            function getMousePos(e){
+            function getMousePos(e) {
                 const touch = e.touches ? e.touches[0] : e;
-                return {
-                    x: touch.clientX,
-                    y: touch.clientY
-                };
+                return { x: touch.clientX, y: touch.clientY };
             }
 
-            function isApplePencilTouch(e){
+            function isApplePencilTouch(e) {
                 if (e.touches) {
                     const touch = e.touches[0];
-                    return touch.touchType === "stylus"; // Ensure it's an Apple Pencil
+                    return touch.touchType === "stylus";
                 }
-                return true; // Allow mouse events on desktops
+                return true;
             }
 
-            function startDrawing(e){
+            function startDrawing(e) {
                 if (!isDrawingEnabled || isErasing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
                 ctx.beginPath();
                 ctx.moveTo(pos.x, pos.y);
-                currentPath.push({x: pos.x, y: pos.y});
+                currentPath.push({ x: pos.x, y: pos.y });
                 drawing = true;
             }
 
-            function continueDrawing(e){
+            function continueDrawing(e) {
                 if (!drawing || !isDrawingEnabled || isErasing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
                 ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
-                currentPath.push({x: pos.x, y: pos.y});
+                currentPath.push({ x: pos.x, y: pos.y });
             }
 
-            function savePath(){
+            function savePath() {
                 if (currentPath.length > 0) {
                     paths.push([...currentPath]);
                     undonePaths = [];
@@ -87,16 +76,16 @@
                 }
             }
 
-            function erasePath(e){
+            function erasePath(e) {
                 if (!isDrawingEnabled || !isErasing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
                 ctx.clearRect(pos.x - ctx.lineWidth / 2, pos.y - ctx.lineWidth / 2, ctx.lineWidth, ctx.lineWidth);
-                drawing = true; // To keep erasing while moving
+                drawing = true;
             }
 
-            function redrawCanvas(){
+            function redrawCanvas() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 for (let path of paths) {
                     ctx.beginPath();
@@ -108,7 +97,7 @@
                 }
             }
 
-            function startAction(e){
+            function startAction(e) {
                 if (e.touches && !isApplePencilTouch(e)) return;
                 if (isErasing) {
                     erasePath(e);
@@ -117,7 +106,7 @@
                 }
             }
 
-            function moveAction(e){
+            function moveAction(e) {
                 if (!drawing) return;
                 if (e.touches && !isApplePencilTouch(e)) return;
                 if (isErasing) {
@@ -127,7 +116,7 @@
                 }
             }
 
-            function endAction(){
+            function endAction() {
                 if (drawing) {
                     drawing = false;
                     if (!isErasing) savePath();
@@ -138,20 +127,11 @@
             canvas.addEventListener("mousemove", moveAction);
             canvas.addEventListener("mouseup", endAction);
             canvas.addEventListener("mouseleave", endAction);
-            canvas.addEventListener("touchstart", (e) => {
-                startAction(e);
-                e.preventDefault();
-            });
-            canvas.addEventListener("touchmove", (e) => {
-                moveAction(e);
-                e.preventDefault();
-            });
-            canvas.addEventListener("touchend", (e) => {
-                endAction(e);
-                e.preventDefault();
-            });
+            canvas.addEventListener("touchstart", (e) => { startAction(e); e.preventDefault(); });
+            canvas.addEventListener("touchmove", (e) => { moveAction(e); e.preventDefault(); });
+            canvas.addEventListener("touchend", (e) => { endAction(); e.preventDefault(); });
 
-            function createButton(text, top, action){
+            function createButton(text, top, action) {
                 let button = document.createElement("button");
                 button.textContent = text;
                 button.style.position = "fixed";
@@ -191,8 +171,8 @@
 
             let eraserButton = createButton("Toggle Eraser", "130px", () => {
                 isErasing = !isErasing;
-                drawing = false; // Stop current drawing
-                ctx.globalCompositeOperation = isErasing ? 'source-over' : 'source-over'; // Reset to normal drawing mode
+                drawing = false;
+                ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over';
             });
 
             let undoButton = createButton("Undo", "170px", () => {
@@ -220,7 +200,7 @@
             colorPicker.onchange = () => {
                 ctx.strokeStyle = colorPicker.value;
                 isErasing = false;
-                ctx.globalCompositeOperation = 'source-over'; // Ensure back to normal drawing
+                ctx.globalCompositeOperation = 'source-over';
             };
             document.body.appendChild(colorPicker);
 
