@@ -9,8 +9,8 @@
     <script>
         (function() {
             let canvas = document.createElement("canvas");
-            // Reverting to higher resolution canvas without blurring effects
-            let scaleFactor = 2; 
+            // Increase internal resolution of the canvas for better drawing quality
+            let scaleFactor = 4; // Increase the scale factor for smoother lines
             canvas.width = window.innerWidth * scaleFactor;
             canvas.height = window.innerHeight * scaleFactor;
             canvas.style.width = window.innerWidth + "px";
@@ -24,11 +24,13 @@
             document.body.appendChild(canvas);
 
             let ctx = canvas.getContext("2d");
-            ctx.scale(scaleFactor, scaleFactor);
+            ctx.scale(scaleFactor, scaleFactor); // Scale to match the resolution
             ctx.lineWidth = 5;
             ctx.strokeStyle = "red";
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
+            ctx.shadowBlur = 1.5; // Slight blur for smoother lines
+            ctx.shadowColor = "black";
 
             let drawing = false;
             let isDrawingEnabled = true;
@@ -39,7 +41,7 @@
 
             function getMousePos(e) {
                 const touch = e.touches ? e.touches[0] : e;
-                return { x: touch.clientX, y: touch.clientY, force: touch.force || 0 };
+                return { x: touch.clientX, y: touch.clientY };
             }
 
             function isApplePencilTouch(e) {
@@ -66,19 +68,7 @@
                 if (e.touches && !isApplePencilTouch(e)) return;
                 e.preventDefault();
                 let pos = getMousePos(e);
-                
-                if (e.touches && pos.force > 0) {
-                    // Simulating Apple Pencil Pro squeeze by adjusting line width based on force
-                    ctx.lineWidth = Math.max(lineWidthPicker.value * pos.force, 1);
-                }
-
-                if (currentPath.length > 1) {
-                    let lastPoint = currentPath[currentPath.length - 1];
-                    ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, (lastPoint.x + pos.x) / 2, (lastPoint.y + pos.y) / 2);
-                } else {
-                    ctx.lineTo(pos.x, pos.y);
-                }
-
+                ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
                 currentPath.push({ x: pos.x, y: pos.y });
             }
@@ -97,9 +87,7 @@
                     ctx.beginPath();
                     ctx.moveTo(path[0].x, path[0].y);
                     for (let i = 1; i < path.length; i++) {
-                        let point = path[i];
-                        let lastPoint = path[i - 1];
-                        ctx.quadraticCurveTo(lastPoint.x, lastPoint.y, (lastPoint.x + point.x) / 2, (lastPoint.y + point.y) / 2);
+                        ctx.lineTo(path[i].x, path[i].y);
                     }
                     ctx.stroke();
                 }
