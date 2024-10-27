@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canvas Drawing Tool</title>
+    <title>Canvas Drawing Tool 1</title>
 </head>
 <body>
     <script>
@@ -142,10 +142,27 @@
                 button.style.backgroundColor = "#fff";
                 button.style.border = "2px solid #000";
                 button.style.cursor = "pointer";
+                button.style.transition = "transform 0.2s ease";
                 button.ontouchstart = button.onclick = action;
                 document.body.appendChild(button);
                 return button;
             }
+
+            let pencilButton = createButton("Pencil", "90px", () => {
+                isErasing = false;
+                isDrawingEnabled = true;
+                ctx.globalCompositeOperation = 'source-over';
+                pencilButton.style.transform = "scale(1.2)";
+                eraserButton.style.transform = "scale(1)";
+            });
+
+            let eraserButton = createButton("Eraser", "130px", () => {
+                isErasing = true;
+                isDrawingEnabled = true;
+                ctx.globalCompositeOperation = 'destination-out';
+                eraserButton.style.transform = "scale(1.2)";
+                pencilButton.style.transform = "scale(1)";
+            });
 
             createButton("Clear Drawing", "10px", () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -154,70 +171,11 @@
 
             createButton("Remove Canvas", "50px", () => {
                 canvas.remove();
-                clearButton.remove();
-                removeButton.remove();
-                toggleButton.remove();
+                pencilButton.remove();
                 eraserButton.remove();
-                undoButton.remove();
-                redoButton.remove();
-                colorPicker.remove();
-                lineWidthPicker.remove();
             });
 
-            let toggleButton = createButton("Toggle Drawing", "90px", () => {
-                isDrawingEnabled = !isDrawingEnabled;
-                if (!isDrawingEnabled) drawing = false;
-            });
-
-            let eraserButton = createButton("Toggle Eraser", "130px", () => {
-                isErasing = !isErasing;
-                drawing = false;
-                ctx.globalCompositeOperation = isErasing ? 'destination-out' : 'source-over';
-            });
-
-            let undoButton = createButton("Undo", "170px", () => {
-                if (paths.length > 0) {
-                    undonePaths.push(paths.pop());
-                    redrawCanvas();
-                }
-            });
-
-            let redoButton = createButton("Redo", "210px", () => {
-                if (undonePaths.length > 0) {
-                    paths.push(undonePaths.pop());
-                    redrawCanvas();
-                }
-            });
-
-            let colorPicker = document.createElement("input");
-            colorPicker.type = "color";
-            colorPicker.value = "#ff0000";
-            colorPicker.style.position = "fixed";
-            colorPicker.style.top = "250px";
-            colorPicker.style.right = "10px";
-            colorPicker.style.zIndex = 10001;
-            colorPicker.style.cursor = "pointer";
-            colorPicker.onchange = () => {
-                ctx.strokeStyle = colorPicker.value;
-                isErasing = false;
-                ctx.globalCompositeOperation = 'source-over';
-            };
-            document.body.appendChild(colorPicker);
-
-            let lineWidthPicker = document.createElement("input");
-            lineWidthPicker.type = "range";
-            lineWidthPicker.min = 1;
-            lineWidthPicker.max = 50;
-            lineWidthPicker.value = 5;
-            lineWidthPicker.style.position = "fixed";
-            lineWidthPicker.style.top = "290px";
-            lineWidthPicker.style.right = "10px";
-            lineWidthPicker.style.zIndex = 10001;
-            lineWidthPicker.style.cursor = "pointer";
-            lineWidthPicker.oninput = () => {
-                ctx.lineWidth = lineWidthPicker.value;
-            };
-            document.body.appendChild(lineWidthPicker);
+            pencilButton.style.transform = "scale(1.2)"; // Default selected
         })();
     </script>
 </body>
